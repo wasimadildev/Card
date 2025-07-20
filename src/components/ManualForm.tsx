@@ -36,44 +36,97 @@ const ManualForm: React.FC = () => {
     whatsapp: prefilledData.whatsapp || '',
     partnerDetails: prefilledData.partnerDetails || [] as string[],
     targetRegions: prefilledData.targetRegions || [] as string[],
-    lob: prefilledData.lob || '',
+    lob: prefilledData.lob || [] as string[],
     tier: prefilledData.tier || '',
-    grades: prefilledData.grades || '',
+    grades: prefilledData.grades || [] as string[],
     volume: prefilledData.volume || '',
-    addAssociates: prefilledData.addAssociates || false,
+    addAssociates: prefilledData.addAssociates || 'no',
     notes: prefilledData.notes || '',
     businessCardUrl: prefilledData.businessCardUrl || '',
   });
 
   const [businessCardFile, setBusinessCardFile] = useState<File | null>(null);
 
+  // Form options as per requirements
+  const repOptions = [
+    'Itzik Cohen',
+    'Scott Cowie', 
+    'Bruno Do Carmo',
+    'Praveen Arora',
+    'Gil Hanono'
+  ];
+
+  const relevancyOptions = [
+    'Never done business',
+    'Done business within the last 6 months',
+    'Done business in the past',
+    'Not ideal customer'
+  ];
+
   const partnerOptions = [
-    'Authorized Reseller',
+    'Carrier/MVNO',
+    'Enterprise',
+    'Insurance Provider',
+    'Retail',
+    'Trader',
     'Distributor',
-    'System Integrator',
-    'Technology Partner',
-    'Channel Partner',
-    'OEM Partner',
+    'E-tail (D2C)',
+    'E-tail (Marketplace)'
   ];
 
   const regionOptions = [
-    'North America',
-    'South America',
-    'Europe',
-    'Asia Pacific',
     'Middle East',
-    'Africa',
+    'Europe',
+    'USA',
+    'LATAM',
+    'Asia (Japan, Hongkong)',
+    'Australia',
+    'China',
+    'Africa'
   ];
 
-  const tierOptions = ['Tier 1', 'Tier 2', 'Tier 3', 'Enterprise'];
-  const lobOptions = ['Healthcare', 'Education', 'Finance', 'Manufacturing', 'Retail', 'Government'];
-  const relevancyOptions = ['High', 'Medium', 'Low'];
+  const lobOptions = [
+    'Phones',
+    'Tablets',
+    'Accessories',
+    'Computers',
+    'Wearables',
+    'Smart Home',
+    'Consumer Electronics'
+  ];
+
+  const tierOptions = [
+    'New',
+    'Lower Grade',
+    'Higher Grade',
+    'All Grades',
+    'Repair Stock'
+  ];
+
+  const gradesOptions = [
+    'New',
+    'ASIS',
+    'CPO',
+    'CRD',
+    'C2',
+    'C4',
+    'D2',
+    'D3',
+    'TBG'
+  ];
+
+  const volumeOptions = [
+    'Under 100',
+    'Under 500',
+    'Under 1000',
+    'Over 2000 units per month'
+  ];
 
   const handleInputChange = (field: string, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleCheckboxChange = (field: 'partnerDetails' | 'targetRegions', value: string, checked: boolean) => {
+  const handleCheckboxChange = (field: 'partnerDetails' | 'targetRegions' | 'lob' | 'grades', value: string, checked: boolean) => {
     setFormData(prev => ({
       ...prev,
       [field]: checked
@@ -125,19 +178,23 @@ const ManualForm: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 p-6">
       <div className="max-w-4xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-8">
-          <Button variant="outline" onClick={() => navigate('/')}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Dashboard
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Manual Entry Form</h1>
-            <p className="text-muted-foreground">
-              {extractedText ? 'Form pre-filled from business card OCR' :
-               qrData ? 'Form pre-filled from QR code scan' :
-               'Enter contact information manually'}
-            </p>
+        {/* Header with Logo and Event Name */}
+        <div className="flex flex-col space-y-4 mb-8">
+          <div className="flex items-center gap-4">
+            <Button variant="outline" onClick={() => navigate('/')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+          </div>
+          
+          {/* Logo and Event Header */}
+          <div className="text-center space-y-2">
+            <div className="flex justify-start">
+              <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-xl">LOGO</span>
+              </div>
+            </div>
+            <h1 className="text-2xl font-bold text-foreground text-left">Event: ITC Malta</h1>
           </div>
         </div>
 
@@ -180,17 +237,20 @@ const ManualForm: React.FC = () => {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="rep">Rep *</Label>
-                  <Input
-                    id="rep"
-                    value={formData.rep}
-                    onChange={(e) => handleInputChange('rep', e.target.value)}
-                    placeholder="Sales representative"
-                    required
-                  />
+                  <Label htmlFor="rep">Rep at the Event</Label>
+                  <Select value={formData.rep} onValueChange={(value) => handleInputChange('rep', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select rep" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {repOptions.map(option => (
+                        <SelectItem key={option} value={option}>{option}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div>
-                  <Label htmlFor="relevancy">Relevancy *</Label>
+                  <Label htmlFor="relevancy">Relevancy</Label>
                   <Select value={formData.relevancy} onValueChange={(value) => handleInputChange('relevancy', value)}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select relevancy" />
@@ -205,13 +265,12 @@ const ManualForm: React.FC = () => {
               </div>
 
               <div>
-                <Label htmlFor="companyName">Company Name *</Label>
+                <Label htmlFor="companyName">Company Name</Label>
                 <Input
                   id="companyName"
                   value={formData.companyName}
                   onChange={(e) => handleInputChange('companyName', e.target.value)}
                   placeholder="Company name"
-                  required
                 />
               </div>
 
@@ -261,6 +320,17 @@ const ManualForm: React.FC = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
+                  <Label htmlFor="whatsapp">WhatsApp Phone Number</Label>
+                  <PhoneInput
+                    international
+                    countryCallingCodeEditable={false}
+                    defaultCountry="US"
+                    value={formData.whatsapp}
+                    onChange={(value) => handleInputChange('whatsapp', value || '')}
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  />
+                </div>
+                <div>
                   <Label htmlFor="phone">Phone Number</Label>
                   <PhoneInput
                     international
@@ -268,17 +338,6 @@ const ManualForm: React.FC = () => {
                     defaultCountry="US"
                     value={formData.phone}
                     onChange={(value) => handleInputChange('phone', value || '')}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="whatsapp">WhatsApp Number</Label>
-                  <PhoneInput
-                    international
-                    countryCallingCodeEditable={false}
-                    defaultCountry="US"
-                    value={formData.whatsapp}
-                    onChange={(value) => handleInputChange('whatsapp', value || '')}
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
                   />
                 </div>
@@ -310,98 +369,156 @@ const ManualForm: React.FC = () => {
             </CardContent>
           </Card>
 
-          {/* Business Details */}
+          {/* Target Regions */}
           <Card>
             <CardHeader>
-              <CardTitle>Business Details</CardTitle>
-              <CardDescription>Target regions and business information</CardDescription>
+              <CardTitle>Target Regions</CardTitle>
+              <CardDescription>Select target regions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {regionOptions.map(region => (
+                  <div key={region} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`region-${region}`}
+                      checked={formData.targetRegions.includes(region)}
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange('targetRegions', region, checked as boolean)
+                      }
+                    />
+                    <Label htmlFor={`region-${region}`}>{region}</Label>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* LOB */}
+          <Card>
+            <CardHeader>
+              <CardTitle>LOB (Line of Business)</CardTitle>
+              <CardDescription>Select applicable business lines</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {lobOptions.map(option => (
+                  <div key={option} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={`lob-${option}`}
+                      checked={formData.lob.includes(option)}
+                      onCheckedChange={(checked) => 
+                        handleCheckboxChange('lob', option, checked as boolean)
+                      }
+                    />
+                    <Label htmlFor={`lob-${option}`}>{option}</Label>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Tier and Grades */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Tier and Grades</CardTitle>
+              <CardDescription>Select tier preferences and grades</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
-                <Label className="text-base font-medium mb-3 block">Target Regions</Label>
+                <Label htmlFor="tier">General Tier Preference</Label>
+                <Select value={formData.tier} onValueChange={(value) => handleInputChange('tier', value)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select tier" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {tierOptions.map(option => (
+                      <SelectItem key={option} value={option}>{option}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label className="text-base font-medium mb-3 block">Grades They Sell</Label>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {regionOptions.map(region => (
-                    <div key={region} className="flex items-center space-x-2">
+                  {gradesOptions.map(grade => (
+                    <div key={grade} className="flex items-center space-x-2">
                       <Checkbox
-                        id={`region-${region}`}
-                        checked={formData.targetRegions.includes(region)}
+                        id={`grade-${grade}`}
+                        checked={formData.grades.includes(grade)}
                         onCheckedChange={(checked) => 
-                          handleCheckboxChange('targetRegions', region, checked as boolean)
+                          handleCheckboxChange('grades', grade, checked as boolean)
                         }
                       />
-                      <Label htmlFor={`region-${region}`}>{region}</Label>
+                      <Label htmlFor={`grade-${grade}`}>{grade}</Label>
                     </div>
                   ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="lob">Line of Business</Label>
-                  <Select value={formData.lob} onValueChange={(value) => handleInputChange('lob', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select LOB" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {lobOptions.map(option => (
-                        <SelectItem key={option} value={option}>{option}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <Label htmlFor="tier">Tier</Label>
-                  <Select value={formData.tier} onValueChange={(value) => handleInputChange('tier', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select tier" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {tierOptions.map(option => (
-                        <SelectItem key={option} value={option}>{option}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="grades">Grades</Label>
-                  <Input
-                    id="grades"
-                    value={formData.grades}
-                    onChange={(e) => handleInputChange('grades', e.target.value)}
-                    placeholder="e.g., A+, B, C"
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="volume">Volume</Label>
-                  <Input
-                    id="volume"
-                    value={formData.volume}
-                    onChange={(e) => handleInputChange('volume', e.target.value)}
-                    placeholder="Expected volume"
-                  />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Additional Information */}
+          {/* Volume */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Volume</CardTitle>
+              <CardDescription>Select volume range</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Select value={formData.volume} onValueChange={(value) => handleInputChange('volume', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select volume" />
+                </SelectTrigger>
+                <SelectContent>
+                  {volumeOptions.map(option => (
+                    <SelectItem key={option} value={option}>{option}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </CardContent>
+          </Card>
+
+          {/* Add Associates */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Add Associates Information</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex space-x-6">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="associates-yes"
+                    name="addAssociates"
+                    value="yes"
+                    checked={formData.addAssociates === 'yes'}
+                    onChange={(e) => handleInputChange('addAssociates', e.target.value)}
+                    className="h-4 w-4"
+                  />
+                  <Label htmlFor="associates-yes">Yes</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="radio"
+                    id="associates-no"
+                    name="addAssociates"
+                    value="no"
+                    checked={formData.addAssociates === 'no'}
+                    onChange={(e) => handleInputChange('addAssociates', e.target.value)}
+                    className="h-4 w-4"
+                  />
+                  <Label htmlFor="associates-no">No</Label>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Notes and File Upload */}
           <Card>
             <CardHeader>
               <CardTitle>Additional Information</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="addAssociates"
-                  checked={formData.addAssociates}
-                  onCheckedChange={(checked) => handleInputChange('addAssociates', checked)}
-                />
-                <Label htmlFor="addAssociates">Add Associates</Label>
-              </div>
-
               <div>
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea
@@ -453,7 +570,7 @@ const ManualForm: React.FC = () => {
             </Button>
             <Button type="submit" size="lg" className="gap-2">
               <Save className="h-4 w-4" />
-              Save Contact
+              Submit
             </Button>
           </div>
         </form>
