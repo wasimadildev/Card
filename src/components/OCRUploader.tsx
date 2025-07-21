@@ -76,52 +76,84 @@ const OCRUploader: React.FC = () => {
   };
 
   const parseBusinessCardText = (text: string) => {
-    // Simple parsing logic - can be enhanced
     const lines = text.split('\n').filter(line => line.trim());
     const parsedData: any = {};
 
-    // Look for email
-    const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/;
-    const emailMatch = text.match(emailRegex);
-    if (emailMatch) {
-      parsedData.email = emailMatch[0];
+    // Enhanced email detection
+    const emailRegex = /\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b/g;
+    const emailMatches = [...text.matchAll(emailRegex)];
+    if (emailMatches.length > 0) {
+      parsedData.email = emailMatches[0][0];
     }
 
-    // Look for phone numbers
-    const phoneRegex = /(\+?\d{1,4}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/;
-    const phoneMatch = text.match(phoneRegex);
-    if (phoneMatch) {
-      parsedData.phone = phoneMatch[0];
-    }
-
-    // Try to extract name (first non-empty line that's not email/phone)
-    const nameCandidate = lines.find(line => 
-      !emailRegex.test(line) && 
-      !phoneRegex.test(line) && 
-      line.length > 2 &&
-      !/\d/.test(line) // No numbers
-    );
+    // Enhanced phone number detection with international support
+    const phoneRegexes = [
+      /\+\d{1,4}[-.\s]?\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/g, // International format
+      /\(\d{3}\)\s?\d{3}[-.\s]?\d{4}/g, // US format with parentheses
+      /\d{3}[-.\s]?\d{3}[-.\s]?\d{4}/g, // Basic format
+      /\+\d{10,15}/g // Simple international
+    ];
     
-    if (nameCandidate) {
-      const nameParts = nameCandidate.split(' ');
-      if (nameParts.length >= 2) {
-        parsedData.firstName = nameParts[0];
-        parsedData.lastName = nameParts.slice(1).join(' ');
+    for (const regex of phoneRegexes) {
+      const phoneMatches = [...text.matchAll(regex)];
+      if (phoneMatches.length > 0) {
+        parsedData.phone = phoneMatches[0][0];
+        break;
       }
     }
 
-    // Try to extract company (look for common business words)
-    const companyKeywords = ['LLC', 'Inc', 'Corp', 'Ltd', 'Company', 'Solutions', 'Group', 'Technologies'];
-    const companyCandidate = lines.find(line => 
+    // Enhanced name extraction
+    const nameLines = lines.filter(line => {
+      const cleanLine = line.trim();
+      return cleanLine.length > 2 && 
+             cleanLine.length < 50 &&
+             !emailRegex.test(cleanLine) &&
+             !phoneRegexes.some(regex => regex.test(cleanLine)) &&
+             /^[A-Za-z\s.-]+$/.test(cleanLine) && // Only letters, spaces, dots, hyphens
+             cleanLine.split(' ').length <= 4; // Reasonable name length
+    });
+    
+    if (nameLines.length > 0) {
+      const nameParts = nameLines[0].trim().split(/\s+/);
+      if (nameParts.length >= 2) {
+        parsedData.firstName = nameParts[0];
+        parsedData.lastName = nameParts.slice(1).join(' ');
+      } else if (nameParts.length === 1) {
+        parsedData.firstName = nameParts[0];
+      }
+    }
+
+    // Enhanced company detection
+    const companyKeywords = [
+      'LLC', 'Inc', 'Corp', 'Ltd', 'Company', 'Co.', 'Solutions', 'Group', 
+      'Technologies', 'Tech', 'Services', 'Consulting', 'Partners', 'Associates',
+      'Holdings', 'Enterprises', 'Industries', 'Systems', 'Software', 'Digital'
+    ];
+    
+    let companyCandidate = lines.find(line => 
       companyKeywords.some(keyword => 
         line.toLowerCase().includes(keyword.toLowerCase())
       )
     );
     
+    // If no company with keywords, try to find lines that look like company names
+    if (!companyCandidate) {
+      companyCandidate = lines.find(line => {
+        const cleanLine = line.trim();
+        return cleanLine.length > 3 && 
+               cleanLine.length < 100 &&
+               !emailRegex.test(cleanLine) &&
+               !phoneRegexes.some(regex => regex.test(cleanLine)) &&
+               !/^[A-Za-z]+\s[A-Za-z]+$/.test(cleanLine) && // Not just first/last name
+               /[A-Z]/.test(cleanLine); // Has capital letters
+      });
+    }
+    
     if (companyCandidate) {
-      parsedData.companyName = companyCandidate;
+      parsedData.companyName = companyCandidate.trim();
     }
 
+    console.log('OCR Parsed Data:', parsedData);
     return parsedData;
   };
 

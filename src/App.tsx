@@ -12,6 +12,7 @@ import Login from "./components/Login";
 import AdminPanel from "./components/AdminPanel";
 import ExportPage from "./components/ExportPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import UserHistory from "./components/UserHistory";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -29,6 +30,7 @@ const App = () => (
             <Route path="/ocr-upload" element={<OCRUploader />} />
             <Route path="/qr-scanner" element={<QRScanner />} />
             <Route path="/export" element={<ExportPage />} />
+            <Route path="/history" element={<UserHistory />} />
             <Route 
               path="/login" 
               element={

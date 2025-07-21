@@ -74,15 +74,15 @@ const Dashboard: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 p-4 sm:p-6">
+      <div className="max-w-7xl mx-auto space-y-6 sm:space-y-8">
         {/* Header */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
           <div>
-            <h1 className="text-4xl font-bold text-foreground mb-2">
-              Business Card Manager
+            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
+              Event: ITC Malta
             </h1>
-            <p className="text-xl text-muted-foreground">
+            <p className="text-lg sm:text-xl text-muted-foreground">
               Streamline your contact management with OCR and QR scanning
             </p>
           </div>
@@ -91,7 +91,7 @@ const Dashboard: React.FC = () => {
             variant="outline"
             size="lg"
             onClick={() => navigate('/login')}
-            className="gap-2"
+            className="gap-2 shrink-0"
           >
             <Shield className="h-5 w-5" />
             Admin Login
@@ -130,7 +130,7 @@ const Dashboard: React.FC = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="p-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {quickActions.map((action, index) => (
                 <div key={index} className="text-center space-y-4">
                   <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
@@ -160,15 +160,24 @@ const Dashboard: React.FC = () => {
         {state.submissions.length > 0 && (
           <Card className="shadow-lg">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                Recent Submissions
-              </CardTitle>
+              <div className="flex justify-between items-center">
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Recent Submissions
+                </CardTitle>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => navigate('/history')}
+                >
+                  View All History
+                </Button>
+              </div>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {state.submissions.slice(-5).reverse().map((submission) => (
-                  <div key={submission.id} className="flex items-center justify-between p-4 border rounded-lg">
+                {state.submissions.slice(-3).reverse().map((submission) => (
+                  <div key={submission.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border rounded-lg gap-2">
                     <div>
                       <p className="font-medium">
                         {submission.firstName} {submission.lastName}
@@ -184,6 +193,17 @@ const Dashboard: React.FC = () => {
                     </div>
                   </div>
                 ))}
+                {state.submissions.length > 3 && (
+                  <div className="text-center pt-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      onClick={() => navigate('/history')}
+                    >
+                      View {state.submissions.length - 3} more submissions
+                    </Button>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

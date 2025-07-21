@@ -108,30 +108,43 @@ const QRScanner: React.FC = () => {
   };
 
   const extractWhatsAppNumber = (qrData: string): string | null => {
-    // WhatsApp QR codes typically contain URLs like:
-    // https://wa.me/1234567890
-    // https://api.whatsapp.com/send?phone=1234567890
-    // Or just phone numbers
-    
     try {
-      // Check for WhatsApp URL patterns
+      // Enhanced WhatsApp URL patterns
       const waUrlPatterns = [
         /wa\.me\/(\+?\d+)/i,
         /whatsapp\.com\/send\?phone=(\+?\d+)/i,
         /api\.whatsapp\.com\/send\?phone=(\+?\d+)/i,
+        /chat\.whatsapp\.com\/.*phone=(\+?\d+)/i,
       ];
 
       for (const pattern of waUrlPatterns) {
         const match = qrData.match(pattern);
         if (match) {
-          return match[1];
+          let number = match[1];
+          // Ensure country code format
+          if (!number.startsWith('+')) {
+            number = '+' + number;
+          }
+          return number;
         }
       }
 
-      // Check if it's just a phone number
-      const phonePattern = /^\+?\d{10,15}$/;
-      if (phonePattern.test(qrData.trim())) {
-        return qrData.trim();
+      // Enhanced phone number detection
+      const phonePatterns = [
+        /^\+\d{10,15}$/, // International format with +
+        /^\d{10,15}$/, // Just digits
+      ];
+      
+      const cleanData = qrData.trim();
+      for (const pattern of phonePatterns) {
+        if (pattern.test(cleanData)) {
+          let number = cleanData;
+          // Add + if missing and looks like international number
+          if (!number.startsWith('+') && number.length > 10) {
+            number = '+' + number;
+          }
+          return number;
+        }
       }
 
       return null;

@@ -13,14 +13,14 @@ export interface FormData {
   whatsapp: string;
   partnerDetails: string[];
   targetRegions: string[];
-  lob: string;
+  lob: string | string[];
   tier: string;
-  grades: string;
+  grades: string | string[];
   volume: string;
-  addAssociates: boolean;
+  addAssociates: string;
   notes: string;
   businessCardUrl?: string;
-  submittedAt: Date;
+  submittedAt: string;
 }
 
 export interface AuthState {
@@ -38,6 +38,7 @@ export interface AppState {
 // Actions
 type AppAction =
   | { type: 'ADD_SUBMISSION'; payload: FormData }
+  | { type: 'UPDATE_SUBMISSION'; payload: FormData }
   | { type: 'SET_SUBMISSIONS'; payload: FormData[] }
   | { type: 'LOGIN'; payload: { username: string } }
   | { type: 'LOGOUT' }
@@ -62,6 +63,13 @@ const appReducer = (state: AppState, action: AppAction): AppState => {
       return {
         ...state,
         submissions: [...state.submissions, action.payload],
+      };
+    case 'UPDATE_SUBMISSION':
+      return {
+        ...state,
+        submissions: state.submissions.map(submission =>
+          submission.id === action.payload.id ? action.payload : submission
+        ),
       };
     case 'SET_SUBMISSIONS':
       return {

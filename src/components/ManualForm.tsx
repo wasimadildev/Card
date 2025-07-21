@@ -24,6 +24,8 @@ const ManualForm: React.FC = () => {
   const prefilledData = location.state?.prefilledData || {};
   const extractedText = location.state?.extractedText;
   const qrData = location.state?.qrData;
+  const isEditing = location.state?.isEditing || false;
+  const editId = location.state?.editId;
 
   const [formData, setFormData] = useState({
     rep: prefilledData.rep || '',
@@ -161,7 +163,7 @@ const ManualForm: React.FC = () => {
     const submission: FormData = {
       id: Date.now().toString(),
       ...formData,
-      submittedAt: new Date(),
+      submittedAt: new Date().toISOString(),
     };
 
     dispatch({ type: 'ADD_SUBMISSION', payload: submission });
@@ -176,8 +178,8 @@ const ManualForm: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 p-6">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 p-4 sm:p-6">
+      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
         {/* Header with Logo and Event Name */}
         <div className="flex flex-col space-y-4 mb-8">
           <div className="flex items-center gap-4">
@@ -249,19 +251,19 @@ const ManualForm: React.FC = () => {
                     </SelectContent>
                   </Select>
                 </div>
-                <div>
-                  <Label htmlFor="relevancy">Relevancy</Label>
-                  <Select value={formData.relevancy} onValueChange={(value) => handleInputChange('relevancy', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select relevancy" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {relevancyOptions.map(option => (
-                        <SelectItem key={option} value={option}>{option}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div>
+                <Label htmlFor="relevancy">Relevancy *</Label>
+                <Select value={formData.relevancy} onValueChange={(value) => handleInputChange('relevancy', value)}>
+                  <SelectTrigger className={!formData.relevancy ? 'border-destructive' : ''}>
+                    <SelectValue placeholder="Select relevancy" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {relevancyOptions.map(option => (
+                      <SelectItem key={option} value={option}>{option}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
               </div>
 
               <div>
