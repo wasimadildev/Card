@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { ArrowLeft, Upload, FileImage, Loader2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, Upload, FileImage, Loader2, Camera, Image } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Tesseract from 'tesseract.js';
 
@@ -15,6 +16,12 @@ const OCRUploader: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [extractedText, setExtractedText] = useState('');
+  const [activeTab, setActiveTab] = useState('upload');
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -28,6 +35,98 @@ const OCRUploader: React.FC = () => {
     }
   };
 
+  const startCamera = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: 'environment', // Use back camera on mobile
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        } 
+      });
+      setStream(mediaStream);
+      setIsCameraActive(true);
+      if (videoRef.current) {
+        videoRef.current.srcObject = mediaStream;
+      }
+    } catch (error) {
+      toast({
+        title: 'Camera Error',
+        description: 'Unable to access camera. Please check permissions.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach(track => track.stop());
+      setStream(null);
+      setIsCameraActive(false);
+    }
+  };
+
+  const captureImage = () => {
+    if (!videoRef.current || !canvasRef.current) return;
+
+    const canvas = canvasRef.current;
+    const video = videoRef.current;
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.drawImage(video, 0, 0);
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const file = new File([blob], 'captured-image.jpg', { type: 'image/jpeg' });
+          setFile(file);
+          setPreview(canvas.toDataURL());
+          stopCamera();
+          setActiveTab('preview');
+        }
+      }, 'image/jpeg', 0.9);
+    }
+  };
+
+  const enhanceImageForOCR = async (imageFile: File): Promise<File> => {
+    return new Promise((resolve) => {
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = document.createElement('img');
+      
+      img.onload = () => {
+        // Scale up small images for better OCR
+        const scale = Math.max(1, 1500 / Math.max(img.width, img.height));
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        
+        if (ctx) {
+          // Apply image enhancements
+          ctx.filter = 'contrast(1.2) brightness(1.1) saturate(0.8)';
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          
+          // Convert back to file
+          canvas.toBlob((blob) => {
+            if (blob) {
+              const enhancedFile = new File([blob], imageFile.name, { 
+                type: 'image/jpeg',
+                lastModified: Date.now()
+              });
+              resolve(enhancedFile);
+            } else {
+              resolve(imageFile);
+            }
+          }, 'image/jpeg', 0.95);
+        } else {
+          resolve(imageFile);
+        }
+      };
+      
+      img.src = URL.createObjectURL(imageFile);
+    });
+  };
+
   const extractTextFromImage = async () => {
     if (!file) return;
 
@@ -35,7 +134,10 @@ const OCRUploader: React.FC = () => {
     setProgress(0);
 
     try {
-      const result = await Tesseract.recognize(file, 'eng', {
+      // Enhance image for better OCR
+      const enhancedFile = await enhanceImageForOCR(file);
+      
+      const result = await Tesseract.recognize(enhancedFile, 'eng', {
         logger: (m) => {
           if (m.status === 'recognizing text') {
             setProgress(Math.round(m.progress * 100));
@@ -173,80 +275,146 @@ const OCRUploader: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Upload Section */}
+          {/* Scanner Options */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Upload className="h-5 w-5" />
-                Upload Business Card
+                Business Card Scanner
               </CardTitle>
               <CardDescription>
-                Select a clear image of a business card for text extraction
+                Choose your preferred method to capture business card information
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-8 text-center hover:border-muted-foreground/50 transition-colors">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="hidden"
-                  id="file-upload"
-                  disabled={isProcessing}
-                />
-                <label htmlFor="file-upload" className="cursor-pointer">
-                  <FileImage className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-lg font-medium mb-2">Click to upload</p>
-                  <p className="text-sm text-muted-foreground">
-                    PNG, JPG, JPEG up to 10MB
-                  </p>
-                </label>
-              </div>
+            <CardContent>
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="upload" className="flex items-center gap-2">
+                    <Image className="h-4 w-4" />
+                    <span className="hidden sm:inline">Upload File</span>
+                    <span className="sm:hidden">File</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="camera" className="flex items-center gap-2">
+                    <Camera className="h-4 w-4" />
+                    <span className="hidden sm:inline">Use Camera</span>
+                    <span className="sm:hidden">Camera</span>
+                  </TabsTrigger>
+                </TabsList>
 
-              {file && (
-                <div className="space-y-4">
-                  <p className="text-sm text-muted-foreground">
-                    Selected: {file.name}
-                  </p>
-                  
-                  {!isProcessing ? (
-                    <Button 
-                      onClick={extractTextFromImage} 
-                      className="w-full" 
-                      size="lg"
-                    >
-                      <FileImage className="h-4 w-4 mr-2" />
-                      Extract Text with OCR
-                    </Button>
-                  ) : (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        <span className="text-sm">Processing image...</span>
-                      </div>
-                      <Progress value={progress} className="w-full" />
-                      <p className="text-xs text-muted-foreground text-center">
-                        {progress}% complete
+                <TabsContent value="upload" className="space-y-4 mt-4">
+                  <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 sm:p-8 text-center hover:border-muted-foreground/50 transition-colors">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      id="file-upload"
+                      ref={fileInputRef}
+                      disabled={isProcessing}
+                    />
+                    <label htmlFor="file-upload" className="cursor-pointer">
+                      <FileImage className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-muted-foreground mb-4" />
+                      <p className="text-base sm:text-lg font-medium mb-2">Click to upload</p>
+                      <p className="text-xs sm:text-sm text-muted-foreground">
+                        PNG, JPG, JPEG up to 10MB
                       </p>
+                    </label>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="camera" className="space-y-4 mt-4">
+                  {!isCameraActive ? (
+                    <div className="text-center space-y-4">
+                      <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 sm:p-8">
+                        <Camera className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-muted-foreground mb-4" />
+                        <p className="text-base sm:text-lg font-medium mb-2">Use Camera</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground mb-4">
+                          Capture business card directly with your camera
+                        </p>
+                        <Button onClick={startCamera} size="lg" className="w-full">
+                          <Camera className="h-4 w-4 mr-2" />
+                          Start Camera
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="relative rounded-lg overflow-hidden bg-black">
+                        <video
+                          ref={videoRef}
+                          autoPlay
+                          playsInline
+                          muted
+                          className="w-full h-64 sm:h-80 object-cover"
+                        />
+                        <div className="absolute inset-4 border-2 border-white/50 rounded-lg pointer-events-none">
+                          <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-white rounded-tl-lg"></div>
+                          <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-white rounded-tr-lg"></div>
+                          <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-white rounded-bl-lg"></div>
+                          <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-white rounded-br-lg"></div>
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button onClick={captureImage} size="lg" className="flex-1">
+                          <Camera className="h-4 w-4 mr-2" />
+                          Capture
+                        </Button>
+                        <Button onClick={stopCamera} variant="outline" size="lg">
+                          Cancel
+                        </Button>
+                      </div>
                     </div>
                   )}
-                </div>
-              )}
+                </TabsContent>
+
+                <TabsContent value="preview" className="mt-4">
+                  {file && (
+                    <div className="space-y-4">
+                      <p className="text-sm text-muted-foreground">
+                        Selected: {file.name}
+                      </p>
+                      
+                      {!isProcessing ? (
+                        <Button 
+                          onClick={extractTextFromImage} 
+                          className="w-full" 
+                          size="lg"
+                        >
+                          <FileImage className="h-4 w-4 mr-2" />
+                          Extract Text with OCR
+                        </Button>
+                      ) : (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span className="text-sm">Processing image...</span>
+                          </div>
+                          <Progress value={progress} className="w-full" />
+                          <p className="text-xs text-muted-foreground text-center">
+                            {progress}% complete
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </TabsContent>
+              </Tabs>
+              <canvas ref={canvasRef} className="hidden" />
             </CardContent>
           </Card>
 
           {/* Preview Section */}
           <Card>
             <CardHeader>
-              <CardTitle>Preview</CardTitle>
+              <CardTitle>Preview & Results</CardTitle>
               <CardDescription>
-                {preview ? 'Image preview and extracted text' : 'Upload an image to see preview'}
+                {preview ? 'Image preview and extracted text' : 'Capture or upload an image to see preview'}
               </CardDescription>
             </CardHeader>
             <CardContent>
               {preview && (
                 <div className="space-y-4">
-                  <div className="border rounded-lg overflow-hidden">
+                  <div className="border rounded-lg overflow-hidden bg-background">
                     <img 
                       src={preview} 
                       alt="Business card preview" 
@@ -270,8 +438,8 @@ const OCRUploader: React.FC = () => {
               {!preview && (
                 <div className="flex items-center justify-center h-64 bg-muted rounded-lg">
                   <div className="text-center">
-                    <FileImage className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-                    <p className="text-muted-foreground">No image selected</p>
+                    <FileImage className="h-10 w-10 sm:h-12 sm:w-12 mx-auto text-muted-foreground mb-2" />
+                    <p className="text-muted-foreground text-sm sm:text-base">No image selected</p>
                   </div>
                 </div>
               )}
@@ -285,13 +453,26 @@ const OCRUploader: React.FC = () => {
             <CardTitle>Tips for Better OCR Results</CardTitle>
           </CardHeader>
           <CardContent>
-            <ul className="list-disc list-inside space-y-2 text-sm text-muted-foreground">
-              <li>Use a well-lit environment when taking photos</li>
-              <li>Ensure the business card is flat and not wrinkled</li>
-              <li>Keep the camera steady and avoid blurry images</li>
-              <li>Make sure all text is clearly visible and not cut off</li>
-              <li>Higher resolution images generally produce better results</li>
-            </ul>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h4 className="font-medium mb-2">Camera Capture:</h4>
+                <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                  <li>Use good lighting - avoid shadows</li>
+                  <li>Hold camera steady and close to card</li>
+                  <li>Align card within the capture frame</li>
+                  <li>Ensure text is clearly readable</li>
+                </ul>
+              </div>
+              <div>
+                <h4 className="font-medium mb-2">File Upload:</h4>
+                <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
+                  <li>Use high resolution images (1500px+)</li>
+                  <li>Ensure business card is flat</li>
+                  <li>Good contrast between text and background</li>
+                  <li>PNG or JPG formats work best</li>
+                </ul>
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

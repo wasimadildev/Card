@@ -109,44 +109,55 @@ const QRScanner: React.FC = () => {
 
   const extractWhatsAppNumber = (qrData: string): string | null => {
     try {
+      console.log('Extracting from QR data:', qrData);
+      
       // Enhanced WhatsApp URL patterns
       const waUrlPatterns = [
-        /wa\.me\/(\+?\d+)/i,
-        /whatsapp\.com\/send\?phone=(\+?\d+)/i,
-        /api\.whatsapp\.com\/send\?phone=(\+?\d+)/i,
-        /chat\.whatsapp\.com\/.*phone=(\+?\d+)/i,
+        /wa\.me\/(\+?\d{10,15})/i,
+        /whatsapp\.com\/send\?phone=(\+?\d{10,15})/i,
+        /api\.whatsapp\.com\/send\?phone=(\+?\d{10,15})/i,
+        /chat\.whatsapp\.com\/.*phone=(\+?\d{10,15})/i,
+        /wa\.me\/qr\/([A-Za-z0-9]+).*phone=(\+?\d{10,15})/i,
       ];
 
+      // First try URL patterns
       for (const pattern of waUrlPatterns) {
         const match = qrData.match(pattern);
         if (match) {
-          let number = match[1];
-          // Ensure country code format
+          let number = match[match.length - 1]; // Get the last capture group (phone number)
           if (!number.startsWith('+')) {
             number = '+' + number;
           }
+          console.log('Found number via URL pattern:', number);
           return number;
         }
       }
 
-      // Enhanced phone number detection
-      const phonePatterns = [
-        /^\+\d{10,15}$/, // International format with +
-        /^\d{10,15}$/, // Just digits
-      ];
+      // Extract phone numbers from WhatsApp contact info format
+      const contactMatch = qrData.match(/BEGIN:VCARD.*?TEL[^:]*:(\+?\d{10,15})/is);
+      if (contactMatch) {
+        let number = contactMatch[1];
+        if (!number.startsWith('+')) {
+          number = '+' + number;
+        }
+        console.log('Found number via VCARD:', number);
+        return number;
+      }
+
+      // Look for any phone number in the data
+      const phoneRegex = /(\+?\d{10,15})/g;
+      const phoneMatches = [...qrData.matchAll(phoneRegex)];
       
-      const cleanData = qrData.trim();
-      for (const pattern of phonePatterns) {
-        if (pattern.test(cleanData)) {
-          let number = cleanData;
-          // Add + if missing and looks like international number
-          if (!number.startsWith('+') && number.length > 10) {
-            number = '+' + number;
-          }
-          return number;
+      if (phoneMatches.length > 0) {
+        let number = phoneMatches[0][1];
+        if (!number.startsWith('+') && number.length > 10) {
+          number = '+' + number;
         }
+        console.log('Found number via general pattern:', number);
+        return number;
       }
 
+      console.log('No phone number found in QR data');
       return null;
     } catch (error) {
       console.error('Error extracting WhatsApp number:', error);

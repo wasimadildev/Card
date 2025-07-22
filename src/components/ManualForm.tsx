@@ -147,14 +147,28 @@ const ManualForm: React.FC = () => {
     }
   };
 
+  const validateForm = () => {
+    const errors = [];
+    
+    if (!formData.firstName?.trim()) errors.push('First Name');
+    if (!formData.lastName?.trim()) errors.push('Last Name');
+    if (!formData.email?.trim()) errors.push('Email');
+    if (!formData.companyName?.trim()) errors.push('Company Name');
+    if (!formData.rep?.trim()) errors.push('Rep at the Event');
+    if (!formData.relevancy?.trim()) errors.push('Relevancy');
+    
+    return errors;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     // Validate required fields
-    if (!formData.firstName || !formData.lastName || !formData.email) {
+    const validationErrors = validateForm();
+    if (validationErrors.length > 0) {
       toast({
         title: 'Validation Error',
-        description: 'Please fill in all required fields (First Name, Last Name, Email)',
+        description: `Please fill in the following required fields: ${validationErrors.join(', ')}`,
         variant: 'destructive',
       });
       return;
@@ -239,9 +253,9 @@ const ManualForm: React.FC = () => {
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="rep">Rep at the Event</Label>
+                  <Label htmlFor="rep">Rep at the Event *</Label>
                   <Select value={formData.rep} onValueChange={(value) => handleInputChange('rep', value)}>
-                    <SelectTrigger>
+                    <SelectTrigger className={!formData.rep ? 'border-destructive' : ''}>
                       <SelectValue placeholder="Select rep" />
                     </SelectTrigger>
                     <SelectContent>
@@ -267,12 +281,14 @@ const ManualForm: React.FC = () => {
               </div>
 
               <div>
-                <Label htmlFor="companyName">Company Name</Label>
+                <Label htmlFor="companyName">Company Name *</Label>
                 <Input
                   id="companyName"
                   value={formData.companyName}
                   onChange={(e) => handleInputChange('companyName', e.target.value)}
                   placeholder="Company name"
+                  className={!formData.companyName ? 'border-destructive' : ''}
+                  required
                 />
               </div>
 
@@ -284,6 +300,7 @@ const ManualForm: React.FC = () => {
                     value={formData.firstName}
                     onChange={(e) => handleInputChange('firstName', e.target.value)}
                     placeholder="First name"
+                    className={!formData.firstName ? 'border-destructive' : ''}
                     required
                   />
                 </div>
@@ -294,6 +311,7 @@ const ManualForm: React.FC = () => {
                     value={formData.lastName}
                     onChange={(e) => handleInputChange('lastName', e.target.value)}
                     placeholder="Last name"
+                    className={!formData.lastName ? 'border-destructive' : ''}
                     required
                   />
                 </div>
@@ -308,17 +326,18 @@ const ManualForm: React.FC = () => {
               <CardDescription>Communication details</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div>
-                <Label htmlFor="email">Email *</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => handleInputChange('email', e.target.value)}
-                  placeholder="email@example.com"
-                  required
-                />
-              </div>
+                <div>
+                  <Label htmlFor="email">Email *</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    placeholder="email@example.com"
+                    className={!formData.email ? 'border-destructive' : ''}
+                    required
+                  />
+                </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
