@@ -294,7 +294,7 @@ const OCRUploader: React.FC = () => {
                     <span className="hidden sm:inline">Upload File</span>
                     <span className="sm:hidden">File</span>
                   </TabsTrigger>
-                  <TabsTrigger value="camera" className="flex items-center gap-2">
+                  <TabsTrigger value="camera" className="flex items-center gap-2 lg:hidden">
                     <Camera className="h-4 w-4" />
                     <span className="hidden sm:inline">Use Camera</span>
                     <span className="sm:hidden">Camera</span>

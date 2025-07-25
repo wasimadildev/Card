@@ -7,12 +7,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Save, Upload } from 'lucide-react';
+import { ArrowLeft, Save, Upload, Camera } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
 import { FormData } from '@/contexts/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import logo from "../assets/logo.jpeg";
 
 const ManualForm: React.FC = () => {
   const navigate = useNavigate();
@@ -194,20 +195,24 @@ const ManualForm: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/30 p-4 sm:p-6">
       <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
-        {/* Header with Logo and Event Name */}
+        {/* Header with Logo, Event Date and Event Name */}
         <div className="flex flex-col space-y-4 mb-8">
           <div className="flex items-center gap-4">
             <Button variant="outline" onClick={() => navigate('/')}>
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
             </Button>
+            <Button variant="outline" onClick={() => navigate('/ocr-upload')}>
+              <Camera className="h-4 w-4 mr-2" />
+              Scan with OCR
+            </Button>
           </div>
           
           {/* Logo and Event Header */}
           <div className="text-center space-y-2">
             <div className="flex justify-start">
-              <div className="w-16 h-16 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-xl">LOGO</span>
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-xl"><img src={logo} alt="Logo" /></span>
               </div>
             </div>
             <h1 className="text-2xl font-bold text-foreground text-left">Event: ITC Malta</h1>
@@ -599,5 +604,4 @@ const ManualForm: React.FC = () => {
     </div>
   );
 };
-
 export default ManualForm;
