@@ -15,6 +15,8 @@ const UserLogin = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [logoLoaded, setLogoLoaded] = useState(false);
+
 
   // Check if already logged in
   useEffect(() => {
@@ -75,14 +77,21 @@ const UserLogin = () => {
             <User className="h-8 w-8 text-primary" />
           </div>
           <h1 className="text-3xl font-bold text-foreground">Welcome Back</h1>
-         
-         
-              <img
-  src={logo}
-  alt="Logo"
-  className="mt-2 mb-2 w-full h-auto max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg xl:max-w-xl"
-/>
-            
+
+          <div className="mx-auto w-16 h-12 sm:w-20 sm:h-14 md:w-24 md:h-16 lg:w-32 lg:h-20 xl:w-40 xl:h-24 mb-4 relative">
+  {!logoLoaded && (
+    <div className="absolute inset-0 bg-gray-200 animate-pulse rounded" />
+  )}
+  <img
+    src={logo}
+    alt="Logo"
+    className={`w-full h-full object-contain transition-opacity duration-300 ${
+      logoLoaded ? 'opacity-100' : 'opacity-0'
+    }`}
+    onLoad={() => setLogoLoaded(true)}
+  />
+</div>
+
         </div>
 
         {/* Login Form */}
