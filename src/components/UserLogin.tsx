@@ -80,7 +80,7 @@ const UserLogin = () => {
 
           <div className="mx-auto w-16 h-12 sm:w-20 sm:h-14 md:w-24 md:h-16 lg:w-32 lg:h-20 xl:w-40 xl:h-24 mb-4 relative">
   {!logoLoaded && (
-    <div className="absolute inset-0 bg-gray-200 animate-pulse rounded" />
+    <div className="absolute inset-0 bg-white animate-pulse rounded" />
   )}
   <img
     src={logo}
