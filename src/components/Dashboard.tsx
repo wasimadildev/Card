@@ -15,6 +15,7 @@ import {
   LogOut
 } from 'lucide-react';
 import { useApp } from '@/contexts/AppContext';
+import logo from '../assets/logo.jpeg';
 
 const Dashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -114,9 +115,9 @@ const Dashboard: React.FC = () => {
         {/* Header */}
         <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2">
-              Event: ITC Malta
-            </h1>
+            <div className="w-[150px] sm:w-[180px] md:w-[200px] lg:w-[240px] xl:w-[280px] mb-2">
+              <img src={logo} alt="logo" className="w-full h-auto object-contain" />
+            </div>
             <p className="text-lg sm:text-xl text-muted-foreground">
               Streamline your contact management with OCR and QR scanning
             </p>
