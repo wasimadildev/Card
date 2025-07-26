@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { User, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import logo from '../assets/logo.jpeg';
 
 const UserLogin = () => {
   const navigate = useNavigate();
@@ -74,9 +75,15 @@ const UserLogin = () => {
             <User className="h-8 w-8 text-primary" />
           </div>
           <h1 className="text-3xl font-bold text-foreground">Welcome Back</h1>
-          <p className="text-muted-foreground">
-            Sign in to access ITC Malta contact management
-          </p>
+          <div className="flex justify-center">
+              <div className="h-40 w-40 sm:w-24 sm:h-24 rounded-lg flex items-center justify-center">
+                <img
+                  src={logo}
+                  alt="Logo"
+                  className="w-[200px] h-[200px] sm:w-[200px] sm:h-[200px] object-contain"
+                />
+              </div>
+            </div>
         </div>
 
         {/* Login Form */}

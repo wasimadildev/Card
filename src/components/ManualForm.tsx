@@ -53,7 +53,7 @@ const ManualForm: React.FC = () => {
   // Form options as per requirements
   const repOptions = [
     'Itzik Cohen',
-    'Scott Cowie', 
+    'Scott Cowie',
     'Bruno Do Carmo',
     'Praveen Arora',
     'Gil Hanono'
@@ -150,20 +150,20 @@ const ManualForm: React.FC = () => {
 
   const validateForm = () => {
     const errors = [];
-    
+
     if (!formData.firstName?.trim()) errors.push('First Name');
     if (!formData.lastName?.trim()) errors.push('Last Name');
     if (!formData.email?.trim()) errors.push('Email');
     if (!formData.companyName?.trim()) errors.push('Company Name');
     if (!formData.rep?.trim()) errors.push('Rep at the Event');
     if (!formData.relevancy?.trim()) errors.push('Relevancy');
-    
+
     return errors;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     // Validate required fields
     const validationErrors = validateForm();
     if (validationErrors.length > 0) {
@@ -182,7 +182,7 @@ const ManualForm: React.FC = () => {
     };
 
     dispatch({ type: 'ADD_SUBMISSION', payload: submission });
-    
+
     toast({
       title: 'Success!',
       description: 'Contact information has been saved successfully.',
@@ -207,16 +207,20 @@ const ManualForm: React.FC = () => {
               Scan with OCR
             </Button>
           </div>
-          
+
           {/* Logo and Event Header */}
           <div className="text-center space-y-2">
             <div className="flex justify-start">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-xl"><img src={logo} alt="Logo" /></span>
+              <div className="h-40 w-40 sm:w-24 sm:h-24 rounded-lg flex items-center justify-center">
+                <img
+                  src={logo}
+                  alt="Logo"
+                  className="w-[200px] h-[200px] sm:w-[200px] sm:h-[200px] object-contain"
+                />
               </div>
             </div>
-            <h1 className="text-2xl font-bold text-foreground text-left">Event: ITC Malta</h1>
           </div>
+
         </div>
 
         {/* Pre-filled Data Alert */}
@@ -270,19 +274,19 @@ const ManualForm: React.FC = () => {
                     </SelectContent>
                   </Select>
                 </div>
-              <div>
-                <Label htmlFor="relevancy">Relevancy *</Label>
-                <Select value={formData.relevancy} onValueChange={(value) => handleInputChange('relevancy', value)}>
-                  <SelectTrigger className={!formData.relevancy ? 'border-destructive' : ''}>
-                    <SelectValue placeholder="Select relevancy" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {relevancyOptions.map(option => (
-                      <SelectItem key={option} value={option}>{option}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                <div>
+                  <Label htmlFor="relevancy">Relevancy *</Label>
+                  <Select value={formData.relevancy} onValueChange={(value) => handleInputChange('relevancy', value)}>
+                    <SelectTrigger className={!formData.relevancy ? 'border-destructive' : ''}>
+                      <SelectValue placeholder="Select relevancy" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {relevancyOptions.map(option => (
+                        <SelectItem key={option} value={option}>{option}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div>
@@ -331,18 +335,18 @@ const ManualForm: React.FC = () => {
               <CardDescription>Communication details</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-                <div>
-                  <Label htmlFor="email">Email *</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange('email', e.target.value)}
-                    placeholder="email@example.com"
-                    className={!formData.email ? 'border-destructive' : ''}
-                    required
-                  />
-                </div>
+              <div>
+                <Label htmlFor="email">Email *</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  placeholder="email@example.com"
+                  className={!formData.email ? 'border-destructive' : ''}
+                  required
+                />
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -384,7 +388,7 @@ const ManualForm: React.FC = () => {
                     <Checkbox
                       id={`partner-${option}`}
                       checked={formData.partnerDetails.includes(option)}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={(checked) =>
                         handleCheckboxChange('partnerDetails', option, checked as boolean)
                       }
                     />
@@ -408,7 +412,7 @@ const ManualForm: React.FC = () => {
                     <Checkbox
                       id={`region-${region}`}
                       checked={formData.targetRegions.includes(region)}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={(checked) =>
                         handleCheckboxChange('targetRegions', region, checked as boolean)
                       }
                     />
@@ -432,7 +436,7 @@ const ManualForm: React.FC = () => {
                     <Checkbox
                       id={`lob-${option}`}
                       checked={formData.lob.includes(option)}
-                      onCheckedChange={(checked) => 
+                      onCheckedChange={(checked) =>
                         handleCheckboxChange('lob', option, checked as boolean)
                       }
                     />
@@ -472,7 +476,7 @@ const ManualForm: React.FC = () => {
                       <Checkbox
                         id={`grade-${grade}`}
                         checked={formData.grades.includes(grade)}
-                        onCheckedChange={(checked) => 
+                        onCheckedChange={(checked) =>
                           handleCheckboxChange('grades', grade, checked as boolean)
                         }
                       />
